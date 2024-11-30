@@ -3,6 +3,7 @@ version: '3.9'
 services:
   db-init:
     image: postgres:15
+    user: root
     volumes:
       - ./blockscout-db-data:/var/lib/postgresql/data
     entrypoint:
@@ -13,7 +14,7 @@ services:
 
   db:
     image: postgres:15
-    user: 2000:2000
+    user: root
     shm_size: 256m
     restart: always
     container_name: 'db'
