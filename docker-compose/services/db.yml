@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   db-init:
-    image: postgres:15
+    image: postgres:17
     user: root
     volumes:
       - ./blockscout-db-data:/var/lib/postgresql/data
@@ -13,7 +13,7 @@ services:
         chown -R 999:999 /var/lib/postgresql/data
 
   db:
-    image: postgres:15
+    image: postgres:17
     user: root
     shm_size: 256m
     restart: always
