@@ -1,93 +1,176 @@
 map $http_upgrade $connection_upgrade {
-
   default upgrade;
   ''      close;
 }
 
-server {
-    listen       80;
-    server_name  localhost;
-    proxy_http_version 1.1;
-
-    location ~ ^/(api(?!-docs$)|socket|sitemap.xml|auth/auth0|auth/auth0/callback|auth/logout) {
-        proxy_pass            ${BACK_PROXY_PASS};
-        proxy_http_version    1.1;
-        proxy_set_header      Host "$host";
-        proxy_set_header      X-Real-IP "$remote_addr";
-        proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
-        proxy_set_header      X-Forwarded-Proto "$scheme";
-        proxy_set_header      Upgrade "$http_upgrade";
-        proxy_set_header      Connection $connection_upgrade;
-        proxy_cache_bypass    $http_upgrade;
-    }
-    location / {
-        proxy_pass            ${FRONT_PROXY_PASS};
-        proxy_http_version    1.1;
-        proxy_set_header      Host "$host";
-        proxy_set_header      X-Real-IP "$remote_addr";
-        proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
-        proxy_set_header      X-Forwarded-Proto "$scheme";
-        proxy_set_header      Upgrade "$http_upgrade";
-        proxy_set_header      Connection $connection_upgrade;
-        proxy_cache_bypass    $http_upgrade;
-    }
+map $http_origin $allowed_origin {
+  default "";
+  # 使用正则表达式替代通配符 *
+  ~^http://(localhost|128\.1\.40\.107)(:[0-9]+)?$    $http_origin;
+  "https://paperschain.io"        $http_origin;
+  "https://www.paperschain.io"    $http_origin;
+  "http://www.paperschain.io"     $http_origin;
+  "http://paperschain.io"         $http_origin;
 }
-server {
-    listen       8080;
-    server_name  localhost;
-    proxy_http_version 1.1;
-    proxy_hide_header Access-Control-Allow-Origin;
-    proxy_hide_header Access-Control-Allow-Methods;
-    add_header 'Access-Control-Allow-Origin' 'http://localhost' always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Allow-Methods' 'PUT, GET, POST, OPTIONS, DELETE, PATCH' always;
 
-    location / {
-        proxy_pass            http://stats:8050/;
-        proxy_http_version    1.1;
-        proxy_set_header      Host "$host";
-        proxy_set_header      X-Real-IP "$remote_addr";
-        proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
-        proxy_set_header      X-Forwarded-Proto "$scheme";
-        proxy_set_header      Upgrade "$http_upgrade";
-        proxy_set_header      Connection $connection_upgrade;
-        proxy_cache_bypass    $http_upgrade;
+# HTTP 80 端口配置
+server {
+  listen       80;
+  server_name  localhost paperschain.io 128.1.40.107 www.paperschain.io;
+  proxy_http_version 1.1;
+
+  # API 路由
+  location ~ ^/(api(?!-docs$)|socket|sitemap.xml|auth/auth0|auth/auth0/callback|auth/logout) {
+    proxy_pass            ${BACK_PROXY_PASS};
+    proxy_http_version    1.1;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+
+    # 修复点：隐藏后端 CORS 头 + 统一添加头
+    proxy_hide_header 'Access-Control-Allow-Origin';
+    proxy_hide_header 'Access-Control-Allow-Methods';
+    proxy_hide_header 'Access-Control-Allow-Headers';
+    add_header 'Access-Control-Allow-Origin' $allowed_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,Content-Type,Authorization' always;
+
+    # 处理 OPTIONS 请求
+    if ($request_method = 'OPTIONS') {
+      add_header 'Content-Length' 0;
+      return 204;
     }
+  }
+
+  # 前端路由
+  location / {
+    proxy_pass            ${FRONT_PROXY_PASS};
+    proxy_http_version    1.1;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+  }
 }
-server {
-    listen       8081;
-    server_name  localhost;
-    proxy_http_version 1.1;
-    proxy_hide_header Access-Control-Allow-Origin;
-    proxy_hide_header Access-Control-Allow-Methods;
-    add_header 'Access-Control-Allow-Origin' 'http://localhost' always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Allow-Methods' 'PUT, GET, POST, OPTIONS, DELETE, PATCH' always;
-    add_header 'Access-Control-Allow-Headers' 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,x-csrf-token' always;
 
-    location / {
-        proxy_pass            http://visualizer:8050/;
-        proxy_http_version    1.1;
-        proxy_buffering       off;
-        proxy_set_header      Host "$host";
-        proxy_set_header      X-Real-IP "$remote_addr";
-        proxy_connect_timeout 30m;
-        proxy_read_timeout    30m;
-        proxy_send_timeout    30m;
-        proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
-        proxy_set_header      X-Forwarded-Proto "$scheme";
-        proxy_set_header      Upgrade "$http_upgrade";
-        proxy_set_header      Connection $connection_upgrade;
-        proxy_cache_bypass    $http_upgrade;
-        if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' 'http://localhost' always;
-            add_header 'Access-Control-Allow-Credentials' 'true' always;
-            add_header 'Access-Control-Allow-Methods' 'PUT, GET, POST, OPTIONS, DELETE, PATCH' always;
-            add_header 'Access-Control-Allow-Headers' 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,x-csrf-token' always;
-            add_header 'Access-Control-Max-Age' 1728000;
-            add_header 'Content-Type' 'text/plain charset=UTF-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
+# HTTPS 443 端口配置
+server {
+  listen       443 ssl;
+  server_name  localhost paperschain.io www.paperschain.io 128.1.40.107;
+  ssl_certificate     /etc/letsencrypt/live/paperschain.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/paperschain.io/privkey.pem;
+  proxy_http_version 1.1;
+
+  # API 路由（修改点同 80 端口）
+  location ~ ^/(api(?!-docs$)|socket|sitemap.xml|auth/auth0|auth/auth0/callback|auth/logout) {
+    proxy_pass            ${BACK_PROXY_PASS};
+    proxy_http_version    1.1;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+
+    # 修复点：隐藏后端 CORS 头 + 统一添加头
+    proxy_hide_header 'Access-Control-Allow-Origin';
+    proxy_hide_header 'Access-Control-Allow-Methods';
+    proxy_hide_header 'Access-Control-Allow-Headers';
+    add_header 'Access-Control-Allow-Origin' $allowed_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,Content-Type,Authorization' always;
+
+    if ($request_method = 'OPTIONS') {
+      add_header 'Content-Length' 0;
+      return 204;
     }
+  }
+
+  location / {
+    proxy_pass            ${FRONT_PROXY_PASS};
+    proxy_http_version    1.1;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+  }
+}
+
+# 其他服务配置（8080/8081 端口按相同模式修改）
+server {
+  listen       8080 ssl;
+  server_name  localhost paperschain.io www.paperschain.io 128.1.40.107;
+  ssl_certificate     /etc/letsencrypt/live/paperschain.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/paperschain.io/privkey.pem;
+  proxy_http_version 1.1;
+
+  location / {
+    proxy_pass            http://stats:8050/;
+    proxy_http_version    1.1;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+
+    # 修复点：隐藏后端头
+    proxy_hide_header 'Access-Control-Allow-Origin';
+    proxy_hide_header 'Access-Control-Allow-Methods';
+    add_header 'Access-Control-Allow-Origin' $allowed_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+  }
+}
+
+server {
+  listen       8081 ssl;
+  server_name  localhost paperschain.io www.paperschain.io 128.1.40.107;
+  ssl_certificate     /etc/letsencrypt/live/paperschain.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/paperschain.io/privkey.pem;
+  proxy_http_version 1.1;
+
+  location / {
+    proxy_pass            http://visualizer:8050/;
+    proxy_http_version    1.1;
+    proxy_buffering       off;
+    proxy_set_header      Host "$host";
+    proxy_set_header      X-Real-IP "$remote_addr";
+    proxy_connect_timeout 30m;
+    proxy_read_timeout    30m;
+    proxy_send_timeout    30m;
+    proxy_set_header      X-Forwarded-For "$proxy_add_x_forwarded_for";
+    proxy_set_header      X-Forwarded-Proto "$scheme";
+    proxy_set_header      Upgrade "$http_upgrade";
+    proxy_set_header      Connection $connection_upgrade;
+    proxy_cache_bypass    $http_upgrade;
+
+    # 修复点：隐藏后端头
+    proxy_hide_header 'Access-Control-Allow-Origin';
+    proxy_hide_header 'Access-Control-Allow-Methods';
+    proxy_hide_header 'Access-Control-Allow-Headers';
+    add_header 'Access-Control-Allow-Origin' $allowed_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,Content-Type,Authorization' always;
+
+    if ($request_method = 'OPTIONS') {
+      add_header 'Content-Length' 0;
+      return 204;
+    }
+  }
 }
