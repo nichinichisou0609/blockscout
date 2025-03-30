@@ -22,3 +22,7 @@ services:
         published: 8080
       - target: 8081
         published: 8081
+      - target: 9000
+        published: 9000
+      - target: 9002
+        published: 9002
