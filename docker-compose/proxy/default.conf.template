@@ -13,10 +13,31 @@ map $http_origin $allowed_origin {
   "http://paperschain.io"         $http_origin;
 }
 
+# HTTP 重定向 - www 到非 www
+server {
+  listen       80;
+  server_name  www.paperschain.io;
+  
+  # 301 永久重定向
+  return 301 http://paperschain.io$request_uri;
+}
+
+# HTTPS 重定向 - www 到非 www
+server {
+  listen       443 ssl;
+  server_name  www.paperschain.io;
+  ssl_certificate     /etc/letsencrypt/live/paperschain.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/paperschain.io/privkey.pem;
+  
+  # 301 永久重定向
+  return 301 https://paperschain.io$request_uri;
+}
+
+
 # HTTP 80 端口配置
 server {
   listen       80;
-  server_name  localhost paperschain.io 128.1.40.107 www.paperschain.io;
+  server_name  localhost paperschain.io 128.1.40.107;
   proxy_http_version 1.1;
 
   # API 路由
@@ -64,7 +85,7 @@ server {
 # HTTPS 443 端口配置
 server {
   listen       443 ssl;
-  server_name  localhost paperschain.io www.paperschain.io 128.1.40.107;
+  server_name  localhost paperschain.io 128.1.40.107;
   ssl_certificate     /etc/letsencrypt/live/paperschain.io/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/paperschain.io/privkey.pem;
   proxy_http_version 1.1;

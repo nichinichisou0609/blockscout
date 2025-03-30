@@ -41,10 +41,10 @@ services:
     links:
       - db:database
     environment:
-        ETHEREUM_JSONRPC_HTTP_URL: http://128.1.40.107:8545
-        ETHEREUM_JSONRPC_TRACE_URL: http://128.1.40.107:8545
-        ETHEREUM_JSONRPC_WS_URL: ws://128.1.40.107:8546
-        CHAIN_ID: '8376'
+        ETHEREUM_JSONRPC_HTTP_URL: http://128.1.40.107:9000
+        ETHEREUM_JSONRPC_TRACE_URL: http://128.1.40.107:9000
+        ETHEREUM_JSONRPC_WS_URL: ws://128.1.40.107:9001
+        CHAIN_ID: '408'
 
   visualizer:
     extends:
