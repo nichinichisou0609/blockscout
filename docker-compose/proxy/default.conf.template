@@ -33,6 +33,18 @@ server {
   return 301 https://paperschain.io$request_uri;
 }
 
+server{
+  listen 443 ssl;
+  server_name  rpc.paperschain.io;
+  ssl_certificate     /etc/letsencrypt/live/rpc.paperschain.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rpc.paperschain.io/privkey.pem;
+  proxy_http_version 1.1;
+
+   location / {
+        proxy_pass http://localhost:9000;
+    }
+}
+
 
 # HTTP 80 端口配置
 server {
