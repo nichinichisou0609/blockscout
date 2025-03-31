@@ -52,6 +52,6 @@ This project is licensed under the GNU General Public License v3.0. See the [LIC
 
 ## 待办
 
-# 需要完成的
+### 需要完成的
 将浏览器与区块链节点整合到同一docker网络，取消区块链节点的对外暴露 状态：未完成  
 为rpc.paperschain.io设置fallback）（端口9000 9002 9004）状态：未完成
