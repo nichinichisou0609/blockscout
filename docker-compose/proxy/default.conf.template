@@ -80,6 +80,16 @@ server {
       return 204;
     }
   }
+  
+  #托管文件路由
+  location /images/ {
+            alias /data/images/; # 指定图片实际存放的路径
+            autoindex off; # 是否允许目录索引（通常设置为off以提高安全性）
+            expires 30d; # 设置缓存过期时间为30天，提高性能
+            access_log off; # 不记录图片访问日志，减少IO
+            log_not_found off; # 不记录图片找不到的日志
+            add_header Cache-Control "public"; # 允许公共缓存
+  }
 
   # 前端路由
   location / {
