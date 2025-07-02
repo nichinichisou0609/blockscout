@@ -2,12 +2,8 @@ version: '3.9'
 
 services:
   db-init:
-<<<<<<< HEAD
     image: postgres:17
-=======
-    image: postgres:15
     user: root
->>>>>>> 1c8e0d8b85 (1)
     volumes:
       - ./blockscout-db-data:/var/lib/postgresql/data
     entrypoint:
@@ -18,12 +14,17 @@ services:
 
   db:
 <<<<<<< HEAD
+<<<<<<< HEAD
     image: postgres:17
     user: 2000:2000
 =======
     image: postgres:15
     user: root
 >>>>>>> 1c8e0d8b85 (1)
+=======
+    image: postgres:15
+    user: root
+>>>>>>> bbd43077feca986a8f17b4a525a39b430360e1e2
     shm_size: 256m
     restart: always
     container_name: 'db'

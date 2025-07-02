@@ -38,6 +38,7 @@ services:
         ETHEREUM_JSONRPC_TRACE_URL: http://128.1.40.107:8545
         ETHEREUM_JSONRPC_WS_URL: ws://128.1.40.107:8546
         CHAIN_ID: '8376'
+<<<<<<< HEAD
 
   nft_media_handler:
     depends_on:
@@ -50,6 +51,8 @@ services:
       dockerfile: ./docker/Dockerfile
       args:
         RELEASE_VERSION: 8.1.1
+=======
+>>>>>>> bbd43077feca986a8f17b4a525a39b430360e1e2
 
   visualizer:
     extends:
