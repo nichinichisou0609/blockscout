@@ -2,7 +2,6 @@ version: '3.9'
 
 services:
   db-init:
-<<<<<<< HEAD
     image: postgres:17
     user: root
     volumes:
@@ -14,7 +13,6 @@ services:
         chown -R 999:999 /var/lib/postgresql/data
 
   db:
-<<<<<<< HEAD
     image: postgres:17
     user: root
     shm_size: 256m
