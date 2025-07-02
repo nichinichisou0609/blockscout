@@ -33,11 +33,6 @@ services:
         RELEASE_VERSION: 8.1.1
     links:
       - db:database
-    environment:
-        ETHEREUM_JSONRPC_HTTP_URL: https://rpc.paperschain.io
-        ETHEREUM_JSONRPC_TRACE_URL: https://rpc.paperschain.io
-        ETHEREUM_JSONRPC_WS_URL: ws://128.1.40.107:9001
-        CHAIN_ID: '408'
 
   nft_media_handler:
     depends_on:
@@ -105,3 +100,38 @@ services:
     extends:
       file: ./services/nginx.yml
       service: proxy
+
+  archive-node-1:
+    image: hyperledger/besu:latest
+    container_name: paperschain-archive-1
+    restart: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+      - "30311:30311/tcp"
+      - "30311:30311/udp"
+    volumes:
+      - ~/paperschain/Node-2/data:/var/lib/besu
+      - ~/paperschain/cliqueGenesis.json:/config/genesis.json
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/var/lib/besu
+      - --network-id=408
+      - --sync-mode=FULL
+      - --data-storage-format=BONSAI
+      - --bonsai-historical-block-limit=1000000
+      - --bonsai-trie-logs-pruning-window-size=1000001
+      - --p2p-interface=0.0.0.0
+      - --p2p-host=128.1.40.107
+      - --p2p-port=30311
+      - --sync-min-peers=1
+      - --bootnodes=enode://c1eb785b25d03a3936fe12251b8638920f200f39403ba3c9fb0cf5f7221232c4cb5ba0c539e56fb7029f399aa1079506662c6639b613da85904757d599b8ff39@128.1.40.107:30310,enode://6ea81f283d8c1a7b8c0a59e7c916d47a57d6be44a5d2a236102aeb06726fb086c89da9fb4794eda3639b2257083400c07a57c47e575d6c6b652f0c9657eadd60@8.148.226.106:30310
+      - --rpc-http-enabled
+      - --rpc-http-port=9000
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-api=ETH,NET,WEB3,CLIQUE,TRACE,DEBUG,TXPOOL
+      - --host-allowlist="*"
+      - --rpc-http-cors-origins="*"
+      - --rpc-http-max-active-connections=2000
+      - --logging=INFO

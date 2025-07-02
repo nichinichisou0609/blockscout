@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   stats-db-init:
-    image: postgres:17
+    image: postgres:15
     volumes:
       - ./stats-db-data:/var/lib/postgresql/data
     entrypoint:
