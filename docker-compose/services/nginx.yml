@@ -9,6 +9,7 @@ services:
     volumes:
       - "../proxy:/etc/nginx/templates"
       - "/etc/letsencrypt:/etc/letsencrypt:ro" 
+      - "/home/ubuntu/data:/data"
 
     environment:
       BACK_PROXY_PASS: ${BACK_PROXY_PASS:-http://backend:4000}

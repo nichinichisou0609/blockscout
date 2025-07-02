@@ -81,7 +81,6 @@ server {
     }
   }
   
-  #托管文件路由
   location /images/ {
             alias /data/images/; # 指定图片实际存放的路径
             autoindex off; # 是否允许目录索引（通常设置为off以提高安全性）
